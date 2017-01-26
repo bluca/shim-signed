@@ -2,4 +2,4 @@ shim-signed (1.0) unstable; urgency=medium
 
   * Create shim-signed from grub2-signed
 
- -- Luca Boccassi <luca.boccassi@gmail.com>  Mon, 23 Jan 2017 17:02:01 +0000
+ -- Luca Boccassi <lboccass@brocade.com>  Mon, 23 Jan 2017 17:02:01 +0000
