@@ -7,19 +7,19 @@ SIGN = debian/bin/sign.py
 
 DEB_HOST_ARCH  := $(shell dpkg-architecture -qDEB_HOST_ARCH)
 
-UNSIGNED_PACKAGE_NAME = grub-efi-$(DEB_HOST_ARCH)-unsigned
-PACKAGE_NAME = grub-efi-$(DEB_HOST_ARCH)-signed
+UNSIGNED_PACKAGE_NAME = shim
+PACKAGE_NAME = shim-signed
 PACKAGE_DIR = debian/$(PACKAGE_NAME)
 SIGNATURE_DIR = debian/signatures/$(UNSIGNED_PACKAGE_NAME)
 
 %:
 	dh $@
 
-# Build with grub's original version, changelog and copyright, as it makes
+# Build with shim's original version, changelog and copyright, as it makes
 # more sense to have it match the unsigned binary
 
 override_dh_gencontrol:
-	dh_gencontrol -p $(PACKAGE_NAME) -- -v$(GRUB_VERSION)
+	dh_gencontrol -p $(PACKAGE_NAME) -- -v$(SHIM_VERSION)
 
 override_dh_installchangelogs:
 	dh_installchangelogs
@@ -32,29 +32,27 @@ override_dh_installdocs:
 		$(PACKAGE_DIR)/usr/share/doc/$(PACKAGE_NAME)/
 
 override_dh_auto_install:
+	mkdir -p $(PACKAGE_DIR)/usr/lib/shim
 	while read SIG; do \
-		mkdir -p $(PACKAGE_DIR)/usr/lib/grub/$${SIG%/*}; \
 		if [ "$(SIGNER)" = "pesign" ]; then \
 			pesign --import-signed-certificate \
-				$(SIGNATURE_DIR)/usr/lib/grub/"$$SIG" \
-				-i /usr/lib/grub/$${SIG%.sig} \
-				-o $(PACKAGE_DIR)/usr/lib/grub/"$$SIG"ned --padding; \
+				$(SIGNATURE_DIR)/usr/lib/shim/"$$SIG" \
+				-i /usr/lib/shim/$${SIG%.sig} \
+				-o $(PACKAGE_DIR)/usr/lib/shim/"$$SIG"ned --padding; \
 		else \
-			cp -a /usr/lib/grub/$${SIG%.sig} \
-				$(PACKAGE_DIR)/usr/lib/grub/"$$SIG"ned; \
-			sbattach --attach $(SIGNATURE_DIR)/usr/lib/grub/"$$SIG" \
-				$(PACKAGE_DIR)/usr/lib/grub/"$$SIG"ned; \
+			cp -a /usr/lib/shim/$${SIG%.sig} \
+				$(PACKAGE_DIR)/usr/lib/shim/"$$SIG"ned; \
+			sbattach --attach $(SIGNATURE_DIR)/usr/lib/shim/"$$SIG" \
+				$(PACKAGE_DIR)/usr/lib/shim/"$$SIG"ned; \
 		fi; \
-	done < <(find $(SIGNATURE_DIR)/usr/lib/grub -name '*.sig' -printf '%P\n')
+	done < <(find $(SIGNATURE_DIR)/usr/lib/shim -name '*.sig' -printf '%P\n')
 
 maintainerclean:
 	rm -rf debian/localpackages
 
 sign:
-	for GRUB_ARCH in $(GRUB_ARCHS); do \
-		$(SIGN) "$(GRUB_VERSION)" "$$GRUB_ARCH" "$(UNSIGNED_PACKAGE_NAME)" \
-		"$(GRUB_PRIVKEY)" "$(GRUB_CERT)" "$(MIRROR_URL)" "$(MIRROR_SUITE)" \
-		"$(SIGNER)" "$(NSS_DIR)" "$(NSS_TOKEN)"; \
+	for SHIM_ARCH in $(SHIM_ARCHS); do \
+		$(SIGN) "$(SHIM_VERSION)" "$$SHIM_ARCH" "$(UNSIGNED_PACKAGE_NAME)" "$(SHIM_PRIVKEY)" "$(SHIM_CERT)" "$(MIRROR_URL)" "$(MIRROR_SUITE)" "$(SIGNER)" "$(NSS_DIR)" "$(NSS_TOKEN)"; \
 	done
 
 .PHONY: maintainerclean sign

@@ -1,38 +1,19 @@
-Source: grub2-signed
+Source: shim-signed
 Section: utils
 Priority: optional
 Maintainer: Luca Boccassi <luca.boccassi@gmail.com>
-Build-Depends: debhelper (>= 9.20151004~), rsync, pesign [amd64 arm64 armhf i386], grub-efi-amd64-unsigned (>= 2.02~beta3-3) [amd64], grub-efi-arm64-unsigned (>= 2.02~beta3-3) [arm64]
+Build-Depends: debhelper (>= 9.20151004~), pesign [amd64 arm64 armhf i386], shim [amd64],
 Standards-Version: 3.9.8
 
-Package: grub-efi-amd64-signed
+Package: shim-signed
 Architecture: any-amd64
-Depends: ${misc:Depends}, grub-efi-amd64
-Description: GRand Unified Bootloader, version 2 (EFI-AMD64 version, signed)
- GRUB is a portable, powerful bootloader.  This version of GRUB is based on a
- cleaner design than its predecessors, and provides the following new features:
+Depends: ${misc:Depends}, shim, grub-efi-amd64-bin, grub2-common (>= 2.02~beta3)
+Description: boot loader to chain-load signed boot loaders under Secure Boot
+ This package provides a minimalist boot loader which allows verifying
+ signatures of other UEFI binaries against either the Secure Boot DB/DBX or
+ against a built-in signature database.  Its purpose is to allow a small,
+ infrequently-changing binary to be signed by the UEFI CA, while allowing
+ an OS distributor to revision their main bootloader independently of the CA.
  .
-  - Scripting in grub.cfg using BASH-like syntax.
-  - Support for modern partition maps such as GPT.
-  - Modular generation of grub.cfg via update-grub.  Packages providing GRUB
-    add-ons can plug in their own script rules and trigger updates by invoking
-    update-grub.
- .
- This package contains a version of GRUB built for use with the EFI-AMD64
- architecture, signed with Debian's UEFI signing key.
-
-Package: grub-efi-arm64-signed
-Architecture: any-arm64
-Depends: ${misc:Depends}, grub-efi-arm64
-Description: GRand Unified Bootloader, version 2 (EFI-ARM64 version, signed)
- GRUB is a portable, powerful bootloader.  This version of GRUB is based on a
- cleaner design than its predecessors, and provides the following new features:
- .
-  - Scripting in grub.cfg using BASH-like syntax.
-  - Support for modern partition maps such as GPT.
-  - Modular generation of grub.cfg via update-grub.  Packages providing GRUB
-    add-ons can plug in their own script rules and trigger updates by invoking
-    update-grub.
- .
- This package contains a version of GRUB built for use with the EFI-ARM64
+ This package contains a version of shim built for use with the EFI-AMD64
  architecture, signed with Debian's UEFI signing key.

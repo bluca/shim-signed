@@ -3,7 +3,7 @@ build.  This avoids the need to expose signing keys to buildds and
 allows reproducible builds.
 
 When preparing a source package, you will need python3-debian,
-sbsigntool or pesign installed.  All the grub2 packages must
+sbsigntool or pesign installed.  All the shim packages must
 have already been built (but not installed).
 
 To generate a key pair and *self-signed* certificate: for testing,
@@ -19,17 +19,17 @@ For module signing you need a DER fomat certificate, so add
 To generate the signatures:
 
 1. Uupdate debian/rules.defs:
-   - GRUB_VERSION: Version of the grub2 packages to be signed.
-   - GRUB_ARCHS: Supported architectures that build monolithic EFI.
+   - SHIM_VERSION: Version of the shim packages to be signed.
+   - SHIM_ARCHS: Supported architectures that build monolithic EFI.
      Currently amd64 and arm64.
-   - GRUB_PRIVKEY: Name of the private key file (RSA PEM
-     format) for grub2 signing.
-   - GRUB_CERT: Name of the certificate file (X.509 PEM
-     format) for grub2 signing.  This certificate must be trusted by
+   - SHIM_PRIVKEY: Name of the private key file (RSA PEM
+     format) for shim signing.
+   - SHIM_CERT: Name of the certificate file (X.509 PEM
+     format) for shim signing.  This certificate must be trusted by
      the boot loader for Secure Boot to work.
      When using pesign, this will be used as the certificate NSS
      nickname.
-   - MIRROR_SUITE: Suite from which to download the grub2
+   - MIRROR_SUITE: Suite from which to download the shim
      packages, if they are not already provided in
      debian/localpackages.
    - SIGNER: default is sbsign, supports pesign too.
@@ -54,7 +54,7 @@ Then, to prepare the source package:
 4. Run 'debian/rules maintainerclean'
 5. Update debian/rules.defs:
    - SIGNED_VERSION_SUFFIX: In case a new source upload is made
-     without changing GRUB_VERSION, this suffix may be set
+     without changing SHIM_VERSION, this suffix may be set
      to e.g. +s2, +s3, etc. to distinguish the binary versions.
      Normally it should be empty.
 6. Run 'debian/rules debian/control'

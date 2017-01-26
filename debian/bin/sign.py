@@ -158,7 +158,7 @@ def sign_image_efi_pesign(image_name, signature_name, nss_dir, cert_name,
     if not os.path.isfile(signature_name):
         raise Exception('pesign failed')
 
-def sign(grubversion_str, arch, package_name, image_privkey_name,
+def sign(shimversion_str, arch, package_name, image_privkey_name,
          image_cert_name, mirror_url, suite, signer='sbsign',
          nss_dir=None, nss_token=""):
     signature_dir = 'debian/signatures'
@@ -167,7 +167,7 @@ def sign(grubversion_str, arch, package_name, image_privkey_name,
 
     try:
         package_dir = get_package(mirror_url, suite,
-                              package_name, grubversion_str, arch)
+                              package_name, shimversion_str, arch)
     except MissingPackageError:
         package_dir = get_package(
             'http://incoming.debian.org/debian-buildd/',

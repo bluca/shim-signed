@@ -1,10 +1,10 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: GNU GRUB
-Source: http://www.gnu.org/software/grub/
+Upstream-Contact: Matthew Garrett <mjg59@coreos.com>
+Source: https://github.com/mjg59/shim.git
 Comment:
- This file describes only the grub2-signed source package. The actual
- bootloader source code may be found in the grub2 source package:
- 'apt-get source grub2'.
+ This file describes only the shim-signed source package. The actual
+ bootloader source code may be found in the shim source package:
+ 'apt-get source shim'.
 
 Files: debian/certs/* debian/signatures/*
 Copyright: Public Domain
