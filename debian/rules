@@ -52,7 +52,7 @@ maintainerclean:
 
 sign:
 	for SHIM_ARCH in $(SHIM_ARCHS); do \
-		$(SIGN) "$(SHIM_VERSION)" "$$SHIM_ARCH" "$(UNSIGNED_PACKAGE_NAME)" "$(SHIM_PRIVKEY)" "$(SHIM_CERT)" "$(MIRROR_URL)" "$(MIRROR_SUITE)" "$(SIGNER)" "$(NSS_DIR)" "$(NSS_TOKEN)"; \
+		$(SIGN) "$(SHIM_VERSION)" "$$SHIM_ARCH" "$(UNSIGNED_PACKAGE_NAME)" "$(SHIM_PRIVKEY)" "$(SHIM_CERT)" "$(MIRROR_URL)" "$(MIRROR_SUITE)" "$(SIGNER)" "$(NSS_DIR)" "$(NSS_TOKEN)" "$(PIN)"; \
 	done
 
 .PHONY: maintainerclean sign
