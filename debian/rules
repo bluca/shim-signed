@@ -1,25 +1,31 @@
 #!/usr/bin/make -f
 SHELL := bash -e
 
-include debian/rules.defs
+include /usr/share/dpkg/default.mk
 
-SIGN = debian/bin/sign.py
+# When forking to a new signed package, it should be enough to change
+# the following two variables:
+# - where to look for unsigned EFI binaries, and where to install them
+# - unsigned package name
+EFI_INSTALL_DIR := /usr/lib/shim
+UNSIGNED_PACKAGE_NAME := shim
 
-DEB_HOST_ARCH  := $(shell dpkg-architecture -qDEB_HOST_ARCH)
-
-UNSIGNED_PACKAGE_NAME = shim
-PACKAGE_NAME = shim-signed
-PACKAGE_DIR = debian/$(PACKAGE_NAME)
-SIGNATURE_DIR = debian/signatures/$(UNSIGNED_PACKAGE_NAME)
+PACKAGE_NAME := $(UNSIGNED_PACKAGE_NAME)-signed
+PACKAGE_DIR := debian/$(PACKAGE_NAME)
+INSTALL_DIR := $(PACKAGE_DIR)/$(EFI_INSTALL_DIR)
+PACKAGE_VERSION := $(shell dpkg-query --showformat='$${Version}' --show $(UNSIGNED_PACKAGE_NAME))
+SIGNED_SUFFIX := ".signed"
 
 %:
 	dh $@
 
-# Build with shim's original version, changelog and copyright, as it makes
+# Build with the original's version, changelog and copyright, as it makes
 # more sense to have it match the unsigned binary
 
+# Generate a strict dependency - the unsigned and signed packages must match
 override_dh_gencontrol:
-	dh_gencontrol -p $(PACKAGE_NAME) -- -v$(SHIM_VERSION)
+	dh_gencontrol -p $(PACKAGE_NAME) -- -v$(PACKAGE_VERSION) \
+		-V'sign:Depends=$(UNSIGNED_PACKAGE_NAME) (= $(PACKAGE_VERSION))'
 
 override_dh_installchangelogs:
 	dh_installchangelogs
@@ -31,28 +37,35 @@ override_dh_installdocs:
 	cp /usr/share/doc/$(UNSIGNED_PACKAGE_NAME)/copyright \
 		$(PACKAGE_DIR)/usr/share/doc/$(PACKAGE_NAME)/
 
+# On the first pass extract the signature(s), package them as signd expects and
+# store them in the OTHER directory. This will trigger the signer, which will
+# place the cpio archive with the signatures in the SOURCES directory and restart
+# the build.
+# During this second pass unpack the signatures and the corresponding hashes and
+# apply them to the binary with pesign, and install them with the .signed suffix.
+# The dummy certutil DB is necessary otherwise pesign will refuse to work.
 override_dh_auto_install:
-	mkdir -p $(PACKAGE_DIR)/usr/lib/shim
-	while read SIG; do \
-		if [ "$(SIGNER)" = "pesign" ]; then \
-			pesign --import-signed-certificate \
-				$(SIGNATURE_DIR)/usr/lib/shim/"$$SIG" \
-				-i /usr/lib/shim/$${SIG%.sig} \
-				-o $(PACKAGE_DIR)/usr/lib/shim/"$$SIG"ned --padding; \
-		else \
-			cp -a /usr/lib/shim/$${SIG%.sig} \
-				$(PACKAGE_DIR)/usr/lib/shim/"$$SIG"ned; \
-			sbattach --attach $(SIGNATURE_DIR)/usr/lib/shim/"$$SIG" \
-				$(PACKAGE_DIR)/usr/lib/shim/"$$SIG"ned; \
-		fi; \
-	done < <(find $(SIGNATURE_DIR)/usr/lib/shim -name '*.sig' -printf '%P\n')
-
-maintainerclean:
-	rm -rf debian/localpackages
-
-sign:
-	for SHIM_ARCH in $(SHIM_ARCHS); do \
-		$(SIGN) "$(SHIM_VERSION)" "$$SHIM_ARCH" "$(UNSIGNED_PACKAGE_NAME)" "$(SHIM_PRIVKEY)" "$(SHIM_CERT)" "$(MIRROR_URL)" "$(MIRROR_SUITE)" "$(SIGNER)" "$(NSS_DIR)" "$(NSS_TOKEN)" "$(PIN)"; \
-	done
-
-.PHONY: maintainerclean sign
+	if [ ! -f ../SOURCES/$(UNSIGNED_PACKAGE_NAME).cpio.rsasign.sig ]; then \
+		nss_db=$$PWD/nss-db; \
+		mkdir -p $$nss_db; \
+		certutil -N -d sql:"$$nss_db" --empty-password; \
+		for f in $$(find $(EFI_INSTALL_DIR) -type f -name "*.efi"); do \
+			pesign -n sql:"$$nss_db" -i $$f -E $${f##*/}.hash; \
+		done; \
+		find . -type f -name "*.hash" | cpio -H newc -o > ../OTHER/$(UNSIGNED_PACKAGE_NAME).cpio.rsasign; \
+		rm -rf $$nss_db; \
+	else \
+		mkdir nss-db; \
+		nss_db=$$PWD/nss-db; \
+		certutil -N -d sql:"$$nss_db" -f "$$nss_db/passwd" --empty-password; \
+		certutil -A -d sql:"$$nss_db" -n cert -t CT,CT,CT -i ../SOURCES/_projectcert.crt; \
+		mkdir -p $(INSTALL_DIR); \
+		cpio -idm < ../SOURCES/$(UNSIGNED_PACKAGE_NAME).cpio.rsasign.sig; \
+		while read SIG; do \
+			export infile=$${SIG%.sig}; \
+			cpio -i --to-stdout $${infile#*/} < ../SOURCES/$(UNSIGNED_PACKAGE_NAME).cpio.rsasign > $${infile}.sattrs; \
+			test -s $${infile}.sattrs || exit 1; \
+			pesign -n sql:"$$nss_db" -c cert -i $(EFI_INSTALL_DIR)/$${SIG%.hash.sig} -o $(INSTALL_DIR)/"$${SIG%.hash.sig}"$(SIGNED_SUFFIX) -d sha256 -I "$${infile}.sattrs" -R "$$SIG"; \
+		done < <(find -type f -name '*.sig' -printf '%P\n'); \
+		rm -rf $$nss_db; \
+	fi

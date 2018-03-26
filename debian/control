@@ -1,13 +1,14 @@
 Source: shim-signed
 Section: utils
 Priority: optional
-Maintainer: Brocade Support <support@brocade.com>
-Build-Depends: debhelper (>= 9.20151004~), pesign [amd64 arm64 armhf i386], shim (= 0.9+1474479173.6c180c6-1vyatta1) [amd64],
+Maintainer: Luca Boccassi <bluca@debian.org>
+Build-Depends: debhelper (>= 9.20151004~), cpio, pesign, shim,
 Standards-Version: 3.9.8
 
 Package: shim-signed
 Architecture: any-amd64
-Depends: ${misc:Depends}, shim, grub-efi-amd64-bin, grub2-common (>= 2.02~beta3)
+Depends: ${misc:Depends}, grub-efi-amd64-bin, grub2-common (>= 2.02~beta3),
+ ${sign:Depends},
 Description: boot loader to chain-load signed boot loaders under Secure Boot
  This package provides a minimalist boot loader which allows verifying
  signatures of other UEFI binaries against either the Secure Boot DB/DBX or

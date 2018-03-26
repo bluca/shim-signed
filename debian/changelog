@@ -1,3 +1,9 @@
+shim-signed (2.0) unstable; urgency=medium
+
+  * Implement OBS-specific two-pass build of signed package
+
+ -- Luca Boccassi <bluca@debian.org>  Tue, 03 Apr 2018 13:02:40 +0100
+
 shim-signed (1.1) unstable; urgency=medium
 
   * Fork shim-signed from grub2-signed

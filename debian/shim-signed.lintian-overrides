@@ -1,2 +1,2 @@
-# we intentionally ship shim's original changelog which is non-native
+# we intentionally ship the original changelog which is non-native
 shim-signed: latest-debian-changelog-entry-changed-to-native
